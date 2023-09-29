@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+    tools {
+    maven 'maven-3.9.4'
+    }
+    stages {
+        stage('clone') {
+            steps {
+                sh "echo this is the first stage"
+               git credentialsId: 'gitHub_credentials', url: 'https://github.com/princenelvin/maven-web-application'
+               sh "echo the first commit is done"
+            }
+        }
+        stage('build') {
+            steps {
+              sh "mvn clean package"
+            }
+        }
+        stage('codequalityanalysis') {
+            steps {
+              sh "mvn sonar:sonar"
+            }
+        }
+        stage('UploadArtifact') {
+            steps {
+              sh "mvn deploy"
+            }
+        }
+        stage('deploy2uat') {
+            steps {
+               deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://18.223.247.16:8080/')], contextPath: null, war: 'target/*war'
+            }
+        }
+    }
+}
